@@ -87,7 +87,7 @@ def searchForAuthors(db):
                     "as" : "titlebas_rat"
                 }
             },
-            {"$match" : {"titlebas_rat.numVotes" : {"$gte" : minvot}}},
+            {"$match" : {"titlebas_rat.numVotes" : {"$gte" : keyword}}},
             {"$sort" : {"titlebas_rat.averageRating" : -1}},
             {"$project" : {"primaryTitle" : 1, "titlebas_rat.numVotes" : 1, "titlebas_rat.averageRating" : 1}}
     ]
@@ -144,8 +144,16 @@ def addArticle(db):
 
     #Prompt the user for a title, a list of authors and a year
     title = input("Please insert a title\n")
-    authorNames = input("Please inset the names of the authors\n")
-    authorList = authorNames.split()
+
+    allAuthorsListed = False
+    authorList = []
+    while not allAuthorsListed:
+        authorNames = input("Please insert the name of the authors (if you wish to stop adding authors insert `) \n")
+        if authorNames == "`":
+            allAuthorsListed = True
+        else:
+            authorList.append(authorNames)
+
     year = int(input("Please insert the year of publication\n"))
     
     #set abstract and venue to null, references set to an empty array, n_citations set to 0
@@ -157,6 +165,8 @@ def addArticle(db):
     newArticle = [{"abstract": abstract, "authors": authorList, "n_citation": nCitations, "refereces": references, "title": title, "venue":venue, "year": year, "id": uniqueId}]
     collection = db["dplb"]
     collection.insert_many(newArticle)
+
+    print("Successfully added article!")
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
