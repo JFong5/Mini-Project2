@@ -1,5 +1,5 @@
 import pymongo
-from pymongo import MongoClient
+from pymongo import MongoClient, TEXT
 import json
 def inputJsonName():
     '''
@@ -48,9 +48,9 @@ def main():
     collection.delete_many({})
     collection.insert_many(collection_list)
     print("Collection Created!")
-
+    collection.update_many({}, [{"$set": {"year": {"$toString": "$year"}}}])
     #Indexing testing
-    db.dplb.create_index([("article", "text"),("author", "text")])
+    collection.create_index([('title', TEXT), ('authors', TEXT), ('abstract', TEXT), ('venue', TEXT), ('year', TEXT)], default_language="english")
     print(db.dplb.index_information())
 
 
