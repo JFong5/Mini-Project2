@@ -47,8 +47,14 @@ def main():
     #insert collection list into database *deletes collection if it already exists
     collection.delete_many({})
     collection.insert_many(collection_list)
+
+    collection.drop_indexes()
+
     print("Collection Created!")
     collection.update_many({}, [{"$set": {"year": {"$toString": "$year"}}}])
+
+
+
     #Indexing testing
     collection.create_index([('title', TEXT), ('authors', TEXT), ('abstract', TEXT), ('venue', TEXT), ('year', TEXT)], default_language="english")
     print(db.dplb.index_information())
