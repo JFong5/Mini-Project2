@@ -98,13 +98,14 @@ def listVenues(db):
 def addArticle(db):
     '''
     Adds an article to the collection by providing a unique id, a title, a list of authors, and a year
+    Error Handling
     '''
     #Prompts the user for a unique id, a title, a list of authors and a year
     uniqueId = input("Please insert a unique id\n")
     title = input("Please insert a title\n")
     authorNames = input("Please inset the names of the authors\n")
     authorList = authorNames.split()
-    year = int(input("Please insert the year of publication"))
+    year = int(input("Please insert the year of publication\n"))
     
     #set abstract and venue to null, references set to an empty array, n_citations set to 0
     venue = None
