@@ -84,10 +84,44 @@ def searchForAuthors(db):
     print(authorList)
 
 def listVenues(db):
-    pass
+    '''
+    Prompts user for number
+    Displays venue, the number of articles in that venue, and the number of articles that reference a paper in that venue
+    '''
+    #Reprompt user for user choice
+    userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
+    if userChoice == 1:
+        mainMenu(db)
+    elif userChoice == 2:
+        exit()
 
 def addArticle(db):
-    pass
+    '''
+    Adds an article to the collection by providing a unique id, a title, a list of authors, and a year
+    '''
+    #Prompts the user for a unique id, a title, a list of authors and a year
+    uniqueId = input("Please insert a unique id\n")
+    title = input("Please insert a title\n")
+    authorNames = input("Please inset the names of the authors\n")
+    authorList = authorNames.split()
+    year = int(input("Please insert the year of publication"))
+    
+    #set abstract and venue to null, references set to an empty array, n_citations set to 0
+    venue = None
+    abstract = None
+    references = []
+    nCitations = 0
+    
+    newArticle = [{"abstract": abstract, "authors": authorList, "n_citation": nCitations, "refereces": references, "title": title, "venue":venue, "year": year, "id": uniqueId}]
+    collection = db["dplb"]
+    collection.insert_many(newArticle)
+
+    #Reprompt user for user choice
+    userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
+    if userChoice == 1:
+        mainMenu(db)
+    elif userChoice == 2:
+        exit()
 
 def exit():
     print("Now exiting, thank you for using our services!")
