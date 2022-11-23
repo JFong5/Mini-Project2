@@ -66,7 +66,8 @@ def searchForAuthors(db):
     #For each matching article, display the id, the title, the year, and the venue fields.
     #the user should be able to select an article to see all fields including the abstract and the authors in addition to the fields listed above.
     #if the article is referenced by other articles, the id, the title, and the year of those references should be also listed.
-
+    
+    collection = db["dplb"]
     userInput = input("Please enter a keyword to search for authors: ")
 
     keywordsList = userInput.split()
