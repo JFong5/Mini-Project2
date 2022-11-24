@@ -159,7 +159,6 @@ def searchForAuthors(db):
 
     #Prompts the user to select which of the authors they would like to see and all their workd
     selectAuthor = int(input("Please select which author you would like to view"))
-    executeQuery
     
 
     #Reprompt user for user choice
