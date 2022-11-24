@@ -154,12 +154,44 @@ def searchForAuthors(db):
         matchingNamesDic[name] += 1
 
     #Prints the name and number of publications
+    n = 0
     for k in matchingNamesDic:
-        print(k + f"\t| " + str(matchingNamesDic[k]))
+        n = n+1
+        print(str(n) + ": " + '{:15s} {:4}'.format(k,str(matchingNamesDic[k])))
 
+<<<<<<< Updated upstream
     #Prompts the user to select which of the authors they would like to see and all their workd
     selectAuthor = int(input("Please select which author you would like to view"))
     executeQuery
+=======
+    #Prompts the user to select which of the authors they would like to see and all their works
+    selectAuthor = int(input("Please select which author you would like to view\n"))
+    while selectAuthor < 1 and selectAuthor > (len(matchingNamesDic) + 1):
+        selectAuthor = int(input("Please select a valid option. \n\n"))
+    
+    #Prints all the articles of the author selected
+    print(f"All work of {matchingNames[selectAuthor - 1]}")
+    query = {"authors" : {"$in": [matchingNames[selectAuthor - 1]]}}
+    executeQuery = collection.find(query)
+    
+    dicList = []
+    for dic in executeQuery:
+        dicList.append(dic)
+    
+    dicList = sorted(dicList, key=lambda x: x['year'], reverse = True)
+
+    for dic in dicList:
+        
+        print(f"id: {dic['id']}")
+        print(f"title: {dic['title']}")
+        print(f"year: {dic['year']}")
+        print(f"venue: {dic['venue']}")
+        print(f"# of citations: {dic['n_citation']}")
+        print(f"abstract: {dic['abstract']}")
+        print("")
+    
+    
+>>>>>>> Stashed changes
     
 
     #Reprompt user for user choice
