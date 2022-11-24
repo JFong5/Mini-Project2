@@ -208,7 +208,7 @@ def searchForAuthors(db):
         #Prints all the title year and venue of the author
         print("")
         print(f"All work of {list(matchingNamesDic)[selectAuthor - 1]}:")
-        query = {"authors" : {"$in": [list(matchingNames)[selectAuthor - 1]]}}
+        query = {"authors" : {"$in": [list(matchingNamesDic)[selectAuthor - 1]]}}
         executeQuery = collection.find(query)
         
         dicList = []
