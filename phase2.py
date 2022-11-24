@@ -1,8 +1,17 @@
+from os import system, name
 import re
 
 import pymongo
 from pymongo import MongoClient
 
+list_of_venue_results = []
+def clear_screen():
+    if name == 'nt':
+        _ = system('cls')
+
+        # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = system('clear')
 def inputPortNum():
     '''
     Prompts the user for a Port Num
@@ -18,7 +27,8 @@ def mainMenu(db):
     Prompts user for an option from 1 to 5
     Execute certain functions for each choice 
     '''
-    #Prompt user for option number
+    #Prompt user for option
+    clear_screen()
     choice = int(input("Please select the following task you would like to perform: \n1.Search for article \n2.Search for authors \n3.List the venues \n4.Add an article \n5.Exit \n"))
     if choice == 1:
         #Executes searchForArticle(db) function
@@ -152,7 +162,6 @@ def searchForAuthors(db):
         for key in dic:
             if key == "authors":
                 authorNames.append(dic[key])
-    
 
     #Gather all matchingNames from query and append to list
     matchingNames = []
@@ -162,7 +171,6 @@ def searchForAuthors(db):
             if keyword.lower() in name.lower():
                 matchingNames.append(name)
 
-    
     #Check to see how many times the name appears in the list and it publication number is the value
     for name in matchingNames:
         matchingNamesDic[name] = 0
@@ -207,7 +215,6 @@ def searchForAuthors(db):
             print(f"venue: {dic['venue']}")
             print("")
 
-
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
@@ -215,47 +222,32 @@ def searchForAuthors(db):
         mainMenu(db)
     elif userChoice == 2:
         exit()
-
     
 def listVenues(db):
+    global list_of_venue_results
     '''
     Prompts user for number
     Displays venue, the number of articles in that venue, and the number of articles that reference a paper in that venue
     '''
+    clear_screen()
     #error checking
     while True:
         try:
             userInput = int(input("Please enter the number of venues you would like to see: "))
+            if userInput > len(list_of_venue_results)-1:
+                print("Given Number is too large....")
+                raise ValueError
             break
         except ValueError:
-            print("Please enter a valid number\n") 
-    
-    
-    collection = db['dblp']
+            print("Please enter a valid number\n")
 
-    #query to get the number of articles in each venue
-   
-    test = collection.aggregate([{'$match': {'venue': {'$not': re.compile('^(?![\s\S])')}}}, {'$group':{'_id' : '$venue', 'article_count' : {'$sum' : 1}}}])
-    test = list(test)
 
-    print(test)
-    #query to get the number of articles that reference a paper in each venue
-    venueCountDict =  collection.aggregate([{"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}])
-    for dic in venueCountDict:
-        print(dic["_id"] + f"\t| {dic['count']}")
-    
-    #convert the query results to dictionaries
-    #venueCountDict = dict((x, venue) for x, venue in enumerate(venueCount, 1))
-    #venueRefCountDict = dict((x, venue) for x, venue in enumerate(venueRefCount, 1))
+    # First result is an empty venue ""
+    for i in range(1, userInput + 1):
+        object_of_result = list_of_venue_results[i]
+        print("Venue: " + object_of_result["_id"] + " ==== # of Articles: " + str(object_of_result["count"]))
 
-    
-    for x in venueCountDict:
-        print(x)
-    print(venueCountDict)
-
-    #print the results
-    #for key, value in venueCountDict.items():
-        #print(f"{key}. | {value['_id']} | {value['count']} | {venueRefCountDict[key]['count']}")
+    print( "Total Unique Venues: " + str(len(list_of_venue_results) - 1) + "\n\n")
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
@@ -326,11 +318,34 @@ def exit():
     print("Now exiting, thank you for using our services!")
 
 def main():
+    global list_of_venue_results
+
     #Prompt user for portNum and insert it into client name
     portNum = inputPortNum()
     client = MongoClient('mongodb://localhost:' + str(portNum))
     db = client["291db"]
+    try:
 
+        if (len(list_of_venue_results) == 0):
+            result = db['dplb'].aggregate([
+                {
+                    '$group': {
+                        '_id': '$venue',
+                        'count': {
+                            '$sum': 1
+                        }
+                    }
+                }, {
+                    '$sort': {
+                        'count': -1
+                    }
+                }
+            ])
+
+            list_of_venue_results = list(result)
+    except Exception as e:
+        print(" Venue list could not be aggrigated, please restart program:  " + e)
+        quit()
     #Calls Main menu function
     mainMenu(db)
 
