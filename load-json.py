@@ -56,7 +56,7 @@ def main():
 
 
     #Indexing testing
-    collection.create_index([('title', TEXT), ('authors', TEXT), ('abstract', TEXT), ('venue', TEXT), ('year', TEXT)], default_language="english")
+    collection.create_index([('title', TEXT), ('authors', TEXT), ('abstract', TEXT), ('venue', TEXT), ('year', TEXT)], default_language="none")
     print(db.dplb.index_information())
 
     #close client when done

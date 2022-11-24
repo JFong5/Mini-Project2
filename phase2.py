@@ -20,18 +20,23 @@ def mainMenu(db):
     choice = int(input("Please select the following task you would like to perform: \n1.Search for article \n2.Search for authors \n3.List the venues \n4.Add an article \n5.Exit \n"))
     if choice == 1:
         #Executes searchForArticle(db) function
+        print("")
         searchForArticle(db)
     elif choice == 2:
         #Executes searchForAuthors(db) function
+        print("")
         searchForAuthors(db)
     elif choice == 3:
         #Executes listVenues(db) function
+        print("")
         listVenues(db)
     elif choice == 4:
         #Executes addArticle(db) function
+        print("")
         addArticle(db)
     elif choice == 5:
         #Executes exit function and closes program
+        print("")
         exit()
 
 def searchForArticle(db):
@@ -84,11 +89,10 @@ def searchForArticle(db):
     for word in keywordsList:
         keywords += f"\"{word}\" "
 
-
     articles = collection.find({"$text": {"$search": keywords}})
-
     articleDict = dict((x, article) for x, article in enumerate(articles, 1))
-    print("The search returned" + str(len(articleDict)) + "articles:")
+   
+    print("The search returned " + str(len(articleDict)) + " articles:")
     for key, value in articleDict.items():
         print(f"{key}. | {value['title']} | {value['year']} | {value['venue']}")
 
@@ -106,6 +110,13 @@ def searchForArticle(db):
         #print all the articles
         printArticle(articleDict[userSelection])
 
+    #Reprompt user for user choice
+    userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
+    if userChoice == 1:
+        print("")
+        mainMenu(db)
+    elif userChoice == 2:
+        exit()
 
 def searchForAuthors(db):
     '''
@@ -159,11 +170,6 @@ def searchForAuthors(db):
         n = n+1
         print(str(n) + ": " + '{:15s} {:4}'.format(k,str(matchingNamesDic[k])))
 
-<<<<<<< Updated upstream
-    #Prompts the user to select which of the authors they would like to see and all their workd
-    selectAuthor = int(input("Please select which author you would like to view"))
-    executeQuery
-=======
     #Prompts the user to select which of the authors they would like to see and all their works
     selectAuthor = int(input("Please select which author you would like to view\n"))
     while selectAuthor < 1 and selectAuthor > (len(matchingNamesDic) + 1):
@@ -190,13 +196,11 @@ def searchForAuthors(db):
         print(f"abstract: {dic['abstract']}")
         print("")
     
-    
->>>>>>> Stashed changes
-    
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
@@ -208,15 +212,19 @@ def listVenues(db):
     Displays venue, the number of articles in that venue, and the number of articles that reference a paper in that venue
     '''
     #error checking
+    '''
     while True:
         try:
             userInput = int(input("Please enter the number of venues you would like to see: "))
             break
         except ValueError:
             print("Please enter a valid number") 
+    '''
+    
+    collection = db['dblp']
 
     #query to get the number of articles in each venue
-    venueCount = db["dblp"].aggregate([
+    venueCount = collection.aggregate([
         {"$group": {"_id": "$venue", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
         {"$limit": userInput}
@@ -241,6 +249,7 @@ def listVenues(db):
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
@@ -297,6 +306,7 @@ def addArticle(db):
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
