@@ -1,6 +1,7 @@
+import re
+
 import pymongo
 from pymongo import MongoClient
-import re
 
 def inputPortNum():
     '''
@@ -8,6 +9,7 @@ def inputPortNum():
     Return: Port Num Input (Int)
     '''
     portNum = int(input("Please input a port number. \n"))
+    print("")
     return portNum
 
 
@@ -20,18 +22,23 @@ def mainMenu(db):
     choice = int(input("Please select the following task you would like to perform: \n1.Search for article \n2.Search for authors \n3.List the venues \n4.Add an article \n5.Exit \n"))
     if choice == 1:
         #Executes searchForArticle(db) function
+        print("")
         searchForArticle(db)
     elif choice == 2:
         #Executes searchForAuthors(db) function
+        print("")
         searchForAuthors(db)
     elif choice == 3:
         #Executes listVenues(db) function
+        print("")
         listVenues(db)
     elif choice == 4:
         #Executes addArticle(db) function
+        print("")
         addArticle(db)
     elif choice == 5:
         #Executes exit function and closes program
+        print("")
         exit()
 
 def searchForArticle(db):
@@ -77,35 +84,45 @@ def searchForArticle(db):
         else:
             
             print("References: None")
+    
     userInput = input("Please insert a keyword or keywords of the article you would like to search\n")
     keywordsList = userInput.split()
     keywords = ""
+    print("")
 
     for word in keywordsList:
         keywords += f"\"{word}\" "
 
-
     articles = collection.find({"$text": {"$search": keywords}})
-
     articleDict = dict((x, article) for x, article in enumerate(articles, 1))
-    print("The search returned" + str(len(articleDict)) + "articles:")
+   
+    print("The search returned " + str(len(articleDict)) + " articles:")
     for key, value in articleDict.items():
         print(f"{key}. | {value['title']} | {value['year']} | {value['venue']}")
-
-    userSelection = input("Please select an article to see all fields including the abstract and the authors in addition to the fields listed above. \n")
     
-    if userSelection.isdigit() == False or userSelection == "q":
-        print("Exiting to main menu")
-        return
+    #checks
+    if len(articleDict) == 0:
+        print("0 results found")
+        print("")
     else:
+        userSelection = input("Please select an article to see all fields including the abstract and the authors in addition to the fields listed above. \n")
+        while userSelection.isdigit() == False or int(userSelection) <= 0 or int(userSelection) > (len(articleDict)):
+            userSelection = (input("Invalid selection! Please select a valid option.\n"))
+    
         userSelection = int(userSelection)
         while userSelection < 1 and userSelection > (len(articleDict) + 1):
             userSelection = int(input("Please select a valid option. \n"))
-        #if userSelection == (len(articleDict) + 1):
-            #mainMenu(db)
         #print all the articles
         printArticle(articleDict[userSelection])
+    print("")
 
+    #Reprompt user for user choice
+    userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
+    if userChoice == 1:
+        print("")
+        mainMenu(db)
+    elif userChoice == 2:
+        exit()
 
 def searchForAuthors(db):
     '''
@@ -158,45 +175,43 @@ def searchForAuthors(db):
     for k in matchingNamesDic:
         n = n+1
         print(str(n) + ": " + '{:15s} {:4}'.format(k,str(matchingNamesDic[k])))
+    print("")
 
-<<<<<<< Updated upstream
-    #Prompts the user to select which of the authors they would like to see and all their workd
-    selectAuthor = int(input("Please select which author you would like to view"))
-    executeQuery
-=======
+    #Checks if there are any matching author names
     #Prompts the user to select which of the authors they would like to see and all their works
-    selectAuthor = int(input("Please select which author you would like to view\n"))
-    while selectAuthor < 1 and selectAuthor > (len(matchingNamesDic) + 1):
-        selectAuthor = int(input("Please select a valid option. \n\n"))
-    
-    #Prints all the articles of the author selected
-    print(f"All work of {matchingNames[selectAuthor - 1]}")
-    query = {"authors" : {"$in": [matchingNames[selectAuthor - 1]]}}
-    executeQuery = collection.find(query)
-    
-    dicList = []
-    for dic in executeQuery:
-        dicList.append(dic)
-    
-    dicList = sorted(dicList, key=lambda x: x['year'], reverse = True)
+    if len(matchingNames) == 0:
+        print("No results found.\n")
+    else:
+        selectAuthor = (input("Please select which author you would like to view\n"))
+        while selectAuthor.isdigit() == False or int(selectAuthor) <= 0 or int(selectAuthor) > (len(matchingNamesDic)):
+            selectAuthor = (input("Invalid selection! Please select a valid option.\n"))
 
-    for dic in dicList:
+        #Convert userchoice to valid int 
+        selectAuthor = int(selectAuthor)
         
-        print(f"id: {dic['id']}")
-        print(f"title: {dic['title']}")
-        print(f"year: {dic['year']}")
-        print(f"venue: {dic['venue']}")
-        print(f"# of citations: {dic['n_citation']}")
-        print(f"abstract: {dic['abstract']}")
+        #Prints all the title year and venue of the author
         print("")
-    
-    
->>>>>>> Stashed changes
-    
+        print(f"All work of {matchingNames[selectAuthor - 1]}:")
+        query = {"authors" : {"$in": [matchingNames[selectAuthor - 1]]}}
+        executeQuery = collection.find(query)
+        
+        dicList = []
+        for dic in executeQuery:
+            dicList.append(dic)
+        
+        dicList = sorted(dicList, key=lambda x: x['year'], reverse = True)
+
+        for dic in dicList:
+            print(f"title: {dic['title']}")
+            print(f"year: {dic['year']}")
+            print(f"venue: {dic['venue']}")
+            print("")
+
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
@@ -213,34 +228,39 @@ def listVenues(db):
             userInput = int(input("Please enter the number of venues you would like to see: "))
             break
         except ValueError:
-            print("Please enter a valid number") 
+            print("Please enter a valid number\n") 
+    
+    
+    collection = db['dblp']
 
     #query to get the number of articles in each venue
-    venueCount = db["dblp"].aggregate([
-        {"$group": {"_id": "$venue", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": userInput}
-    ])
+   
+    test = collection.aggregate([{'$match': {'venue': {'$not': re.compile('^(?![\s\S])')}}}, {'$group':{'_id' : '$venue', 'article_count' : {'$sum' : 1}}}])
+    test = list(test)
 
+    print(test)
     #query to get the number of articles that reference a paper in each venue
-    venueRefCount = db["dblp"].aggregate([
-        {"$match": {"references": {"$exists": True}}},
-        {"$group": {"_id": "$venue", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": userInput}
-    ])
-
+    venueCountDict =  collection.aggregate([{"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}])
+    for dic in venueCountDict:
+        print(dic["_id"] + f"\t| {dic['count']}")
+    
     #convert the query results to dictionaries
-    venueCountDict = dict((x, venue) for x, venue in enumerate(venueCount, 1))
-    venueRefCountDict = dict((x, venue) for x, venue in enumerate(venueRefCount, 1))
+    #venueCountDict = dict((x, venue) for x, venue in enumerate(venueCount, 1))
+    #venueRefCountDict = dict((x, venue) for x, venue in enumerate(venueRefCount, 1))
+
+    
+    for x in venueCountDict:
+        print(x)
+    print(venueCountDict)
 
     #print the results
-    for key, value in venueCountDict.items():
-        print(f"{key}. | {value['_id']} | {value['count']} | {venueRefCountDict[key]['count']}")
+    #for key, value in venueCountDict.items():
+        #print(f"{key}. | {value['_id']} | {value['count']} | {venueRefCountDict[key]['count']}")
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
@@ -283,8 +303,8 @@ def addArticle(db):
     year = input("Please insert the year of publication\n")
     
     #set abstract and venue to null, references set to an empty array, n_citations set to 0
-    venue = None
-    abstract = None
+    venue = ""
+    abstract = ""
     references = []
     nCitations = 0
     
@@ -297,6 +317,7 @@ def addArticle(db):
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
