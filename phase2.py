@@ -1,5 +1,6 @@
 import pymongo
 from pymongo import MongoClient
+import re
 
 def inputPortNum():
     '''
@@ -61,12 +62,8 @@ def searchForArticle(db):
 
 def searchForAuthors(db):
     '''
-    User should be able to provide one or more keywords and see all authors whose names contain the keywords
-    the matches should be case insensitive
-    For each matching article, display the id, the title, the year, and the venue fields.
-    the user should be able to select an article to see all fields including the abstract and the authors in addition to the fields listed above.
-    if the article is referenced by other articles, the id, the title, and the year of those references should be also listed.
-
+    Prompts user for a keyword
+    Displays all authors whose names contain the keyword, displays author name and the number of publications
     '''
     
     #Creates Collection
@@ -74,31 +71,16 @@ def searchForAuthors(db):
 
     #Prompts user for a keyword
     keyword = input("Please enter a keyword to search for authors: ")
-    keyword = f"\"{keyword}\" "
-    
-    #query to find items in collection with common author names
-    query = [
-            {"$match" : {"$text": {"$search": keyword}}},
-            {"$lookup" :
-                {
-                    "from" : "dplb",
-                    "localField" : "authors", 
-                    "foreignField" : "authors",
-                    "as" : "titlebas_rat"
-                }
-            },
-            {"$match" : {"titlebas_rat.numVotes" : {"$gte" : keyword}}},
-            {"$sort" : {"titlebas_rat.averageRating" : -1}},
-            {"$project" : {"primaryTitle" : 1, "titlebas_rat.numVotes" : 1, "titlebas_rat.averageRating" : 1}}
-    ]
+    #words += (keyword + " ")
 
-    query = collection.find({"authors": { "$elemMatch": { "$regex": "/.*"+keyword+".*/" }}})
+    #query to find items in collection with common author names
+    query = {"authors" : {"$in": [re.compile(r"(?i)" + keyword)]}}
+
+    #Executes Query *Need to test if query uses indexes
+    executeQuery = collection.find(query)
     
-    authorList = []
-    for author in query:
-        authorList.append({"names": author["authors"]})
-    
-    print(authorList)
+    for x in executeQuery:
+        print(x)
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
@@ -149,10 +131,9 @@ def addArticle(db):
     authorList = []
     while not allAuthorsListed:
         authorNames = input("Please insert the name of the authors (if you wish to stop adding authors insert `) \n")
+        authorList.append(authorNames)
         if authorNames == "`":
             allAuthorsListed = True
-        else:
-            authorList.append(authorNames)
 
     year = int(input("Please insert the year of publication\n"))
     
@@ -167,7 +148,7 @@ def addArticle(db):
     collection.insert_many(newArticle)
 
     print("Successfully added article!")
-
+    
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
