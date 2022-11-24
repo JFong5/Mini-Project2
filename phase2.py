@@ -9,7 +9,7 @@ def inputPortNum():
     '''
     portNum = int(input("Please input a port number. \n"))
     return portNum
-    
+
 
 def mainMenu(db):
     '''
@@ -33,12 +33,12 @@ def mainMenu(db):
     elif choice == 5:
         #Executes exit function and closes program
         exit()
-
+'''
 def searchForArticle(db):
-    '''
+    
     Prompts user for keyword
     Displays all Articles matching the keyword
-    '''
+    
     #Connects to dplb collection in the database
     collection = db["dplb"]
 
@@ -59,6 +59,80 @@ def searchForArticle(db):
         mainMenu(db)
     elif userChoice == 2:
         exit()
+'''
+
+def searchForArticle(db):
+    """
+    Prompts user for keyword
+    Displays all Articles matching the keyword
+    """ 
+    collection = db["dplb"]
+
+    def getKeyArticle(articleItem, key):
+        """
+        Given an article and a key, return the value of the key
+        """
+        if key in articleItem:
+            return articleItem[key]
+        else:
+            return None
+    def printArticle(articleItem):
+        """
+        Given an article, print all the fields
+        Check for references and print them
+        """
+        print(f"\nid: {getKeyArticle(articleItem, 'id')}")
+        print(f"title: {getKeyArticle(articleItem, 'title')}")
+        print(f"year: {getKeyArticle(articleItem, 'year')}")
+        print(f"venue: {getKeyArticle(articleItem, 'venue')}")
+        print(f"# of citations: {getKeyArticle(articleItem, 'n_citation')}")
+        print(f"authors: {', '.join(map(str, getKeyArticle(articleItem, 'authors')))}")
+        print(f"abstract: {getKeyArticle(articleItem, 'abstract')}")\
+        
+        if getKeyArticle(articleItem, 'references') != None:
+            print("References:")
+            references = getKeyArticle(articleItem, 'references')
+            for reference in references:
+                print(f"\t{reference}")
+                results = collection.find({"id": {"$in": [reference]}})
+                referenceArticle = results
+
+                for article in referenceArticle:
+                    print(f"\t\tid: {getKeyArticle(article, 'id')}")
+                    print(f"\t\ttitle: {getKeyArticle(article, 'title')}")
+                    print(f"\t\tyear: {getKeyArticle(article, 'year')}")
+        else:
+            
+            print("References: None")
+    userInput = input("Please insert a keyword or keywords of the article you would like to search\n")
+    keywordsList = userInput.split()
+    keywords = ""
+
+    for word in keywordsList:
+        keywords += f"\"{word}\" "
+
+
+    articles = collection.find({"$text": {"$search": keywords}})
+
+    articleDict = dict((x, article) for x, article in enumerate(articles, 1))
+    print("The search returned" + str(len(articleDict)) + "articles:")
+    for key, value in articleDict.items():
+        print(f"{key}. | {value['title']} | {value['year']} | {value['venue']}")
+
+    userSelection = input("Please select an article to see all fields including the abstract and the authors in addition to the fields listed above. \n")
+    
+    if userSelection.isNotDigit() or userSelection == "q":
+        print("Exiting to main menu")
+        return
+    else:
+        userSelection = int(userSelection)
+        while userSelection < 1 and userSelection > (len(articleDict) + 1):
+            userSelection = int(input("Please select a valid option. \n"))
+        #if userSelection == (len(articleDict) + 1):
+            #mainMenu(db)
+        #print all the articles
+        printArticle(articleDict[userSelection])
+
 
 def searchForAuthors(db):
     '''
@@ -81,6 +155,9 @@ def searchForAuthors(db):
     
     for x in executeQuery:
         print(x)
+
+    #Format the output of the query
+
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
@@ -167,6 +244,9 @@ def main():
 
     #Calls Main menu function
     mainMenu(db)
+
+    #Close Client when done
+    client.close()
 
 if __name__ == "__main__":
     main()

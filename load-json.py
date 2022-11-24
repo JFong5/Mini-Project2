@@ -53,6 +53,8 @@ def main():
     collection.create_index([('title', TEXT), ('authors', TEXT), ('abstract', TEXT), ('venue', TEXT), ('year', TEXT)], default_language="english")
     print(db.dplb.index_information())
 
+    #close client when done
+    client.close()
 
 if __name__ == "__main__":
     main()
