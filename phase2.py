@@ -129,24 +129,32 @@ def searchForAuthors(db):
     #Aggregate results
 
     #Format the output of the query
+    #append all authorname arrays in authorNames
     authorNames = []
-
     for dic in executeQuery:
         for key in dic:
             if key == "authors":
                 authorNames.append(dic[key])
     
-    print(authorNames)
-    
-    #Gather all matching names for query
+
+    #Gather all matchingNames from query and append to list
     matchingNames = []
+    matchingNamesDic = {}
     for names in authorNames:
         for name in names:
             if keyword.lower() in name.lower():
                 matchingNames.append(name)
 
-    for x in matchingNames:
-        print(x)
+    
+    #Check to see how many times the name appears in the list and it 
+    for name in matchingNames:
+        matchingNamesDic[name] = 0
+    
+    for name in matchingNames:
+        matchingNamesDic[name] += 1
+
+    print(matchingNamesDic)
+
 
 
     #Reprompt user for user choice
