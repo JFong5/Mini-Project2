@@ -17,9 +17,13 @@ def inputPortNum():
     Prompts the user for a Port Num
     Return: Port Num Input (Int)
     '''
-    portNum = int(input("Please input a port number. \n"))
-    print("")
-    return portNum
+    try:
+        portNum = int(input("Please input a port number. \n"))
+        print("")
+        return portNum
+    except Exception as e:
+        print("Cannot convert input to int: " + str(e))
+        return ""
 
 
 def mainMenu(db):
@@ -29,27 +33,29 @@ def mainMenu(db):
     '''
     #Prompt user for option
     clear_screen()
-    choice = int(input("Please select the following task you would like to perform: \n1.Search for article \n2.Search for authors \n3.List the venues \n4.Add an article \n5.Exit \n"))
-    if choice == 1:
+    choice = input("Please select the following task you would like to perform: \n1.Search for article \n2.Search for authors \n3.List the venues \n4.Add an article \n5.Exit \n")
+    if choice == "1":
         #Executes searchForArticle(db) function
         print("")
         searchForArticle(db)
-    elif choice == 2:
+    elif choice == "2":
         #Executes searchForAuthors(db) function
         print("")
         searchForAuthors(db)
-    elif choice == 3:
+    elif choice == "3":
         #Executes listVenues(db) function
         print("")
         listVenues(db)
-    elif choice == 4:
+    elif choice == "4":
         #Executes addArticle(db) function
         print("")
         addArticle(db)
-    elif choice == 5:
+    elif choice == "5":
         #Executes exit function and closes program
         print("")
         exit()
+    else:
+        mainMenu(db)
 
 def searchForArticle(db):
     """
@@ -78,23 +84,21 @@ def searchForArticle(db):
         print(f"# of citations: {getKeyArticle(articleItem, 'n_citation')}")
         print(f"authors: {', '.join(map(str, getKeyArticle(articleItem, 'authors')))}")
         print(f"abstract: {getKeyArticle(articleItem, 'abstract')}")\
-        
-        if getKeyArticle(articleItem, 'references') != None:
-            print("References:")
-            references = getKeyArticle(articleItem, 'references')
-            for reference in references:
-                print(f"\t{reference}")
-                results = collection.find({"id": {"$in": [reference]}})
-                referenceArticle = results
 
-                for article in referenceArticle:
-                    print(f"\t\tid: {getKeyArticle(article, 'id')}")
-                    print(f"\t\ttitle: {getKeyArticle(article, 'title')}")
-                    print(f"\t\tyear: {getKeyArticle(article, 'year')}")
+        if getKeyArticle(articleItem, 'references') != None:
+            print(f"references: {', '.join(map(str, getKeyArticle(articleItem, 'references')))}")
         else:
-            
             print("References: None")
-    
+
+        print("Referenced By Following Articles:")
+        results = collection.find({"references": {"$in": [getKeyArticle(articleItem, 'id')]}})
+        referenceArticle = results
+
+        for article in referenceArticle:
+            print(f"\t\tid: {getKeyArticle(article, 'id')}")
+            print(f"\t\ttitle: {getKeyArticle(article, 'title')}")
+            print(f"\t\tyear: {getKeyArticle(article, 'year')}")
+
     userInput = input("Please insert a keyword or keywords of the article you would like to search\n")
     keywordsList = userInput.split()
     keywords = ""
@@ -124,15 +128,19 @@ def searchForArticle(db):
             userSelection = int(input("Please select a valid option. \n"))
         #print all the articles
         printArticle(articleDict[userSelection])
+
     print("")
 
     #Reprompt user for user choice
-    userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
-    if userChoice == 1:
-        print("")
+    userChoice = input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n")
+    if userChoice == "1":
+        clear_screen()
         mainMenu(db)
-    elif userChoice == 2:
+    elif userChoice == "2":
         exit()
+    else:
+        clear_screen()
+        mainMenu(db)
 
 def searchForAuthors(db):
     '''
@@ -245,6 +253,43 @@ def listVenues(db):
     # First result is an empty venue ""
     for i in range(1, userInput + 1):
         object_of_result = list_of_venue_results[i]
+        # For each article in venu:
+        # Q for reference to article <- Count result
+        # Sum then print
+        filter = {
+            'venue': 'international conference on human-computer interaction'
+        }
+
+        result = db['dplb'].find(
+            filter
+        )
+        sum = 0
+        for i in result:
+            result = db['dplb'].aggregate([
+                {
+                    '$match': {
+                        'references': {
+                            '$in': [
+                                i["id"]
+                            ]
+                        }
+                    }
+                }, {
+                    '$group': {
+                        '_id': '',
+                        'count': {
+                            '$sum': 1
+                        }
+                    }
+                }
+            ])
+            for dict in result:
+                sum += dict["count"]
+
+        print( sum )
+
+        #loop results here
+
         print("Venue: " + object_of_result["_id"] + " ==== # of Articles: " + str(object_of_result["count"]))
 
     print( "Total Unique Venues: " + str(len(list_of_venue_results) - 1) + "\n\n")
@@ -321,7 +366,10 @@ def main():
     global list_of_venue_results
 
     #Prompt user for portNum and insert it into client name
-    portNum = inputPortNum()
+    while True:
+        portNum = inputPortNum()
+        if portNum != "":
+            break
     client = MongoClient('mongodb://localhost:' + str(portNum))
     db = client["291db"]
     try:
