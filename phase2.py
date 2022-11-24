@@ -146,16 +146,21 @@ def searchForAuthors(db):
                 matchingNames.append(name)
 
     
-    #Check to see how many times the name appears in the list and it 
+    #Check to see how many times the name appears in the list and it publication number is the value
     for name in matchingNames:
         matchingNamesDic[name] = 0
     
     for name in matchingNames:
         matchingNamesDic[name] += 1
 
-    print(matchingNamesDic)
+    #Prints the name and number of publications
+    for k in matchingNamesDic:
+        print(k + f"\t| " + str(matchingNamesDic[k]))
 
-
+    #Prompts the user to select which of the authors they would like to see and all their workd
+    selectAuthor = int(input("Please select which author you would like to view"))
+    executeQuery
+    
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
