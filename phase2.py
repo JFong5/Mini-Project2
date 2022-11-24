@@ -1,16 +1,29 @@
+from os import system, name
 import re
 
 import pymongo
 from pymongo import MongoClient
 
+list_of_venue_results = []
+def clear_screen():
+    if name == 'nt':
+        _ = system('cls')
+
+        # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = system('clear')
 def inputPortNum():
     '''
     Prompts the user for a Port Num
     Return: Port Num Input (Int)
     '''
-    portNum = int(input("Please input a port number. \n"))
-    print("")
-    return portNum
+    try:
+        portNum = int(input("Please input a port number. \n"))
+        print("")
+        return portNum
+    except Exception as e:
+        print("Cannot convert input to int: " + str(e))
+        return ""
 
 
 def mainMenu(db):
@@ -18,23 +31,31 @@ def mainMenu(db):
     Prompts user for an option from 1 to 5
     Execute certain functions for each choice 
     '''
-    #Prompt user for option number
-    choice = int(input("Please select the following task you would like to perform: \n1.Search for article \n2.Search for authors \n3.List the venues \n4.Add an article \n5.Exit \n"))
-    if choice == 1:
+    #Prompt user for option
+    clear_screen()
+    choice = input("Please select the following task you would like to perform: \n1.Search for article \n2.Search for authors \n3.List the venues \n4.Add an article \n5.Exit \n")
+    if choice == "1":
         #Executes searchForArticle(db) function
+        print("")
         searchForArticle(db)
-    elif choice == 2:
+    elif choice == "2":
         #Executes searchForAuthors(db) function
+        print("")
         searchForAuthors(db)
-    elif choice == 3:
+    elif choice == "3":
         #Executes listVenues(db) function
+        print("")
         listVenues(db)
-    elif choice == 4:
+    elif choice == "4":
         #Executes addArticle(db) function
+        print("")
         addArticle(db)
-    elif choice == 5:
+    elif choice == "5":
         #Executes exit function and closes program
+        print("")
         exit()
+    else:
+        mainMenu(db)
 
 def searchForArticle(db):
     """
@@ -63,23 +84,21 @@ def searchForArticle(db):
         print(f"# of citations: {getKeyArticle(articleItem, 'n_citation')}")
         print(f"authors: {', '.join(map(str, getKeyArticle(articleItem, 'authors')))}")
         print(f"abstract: {getKeyArticle(articleItem, 'abstract')}")\
-        
-        if getKeyArticle(articleItem, 'references') != None:
-            print("References:")
-            references = getKeyArticle(articleItem, 'references')
-            for reference in references:
-                print(f"\t{reference}")
-                results = collection.find({"id": {"$in": [reference]}})
-                referenceArticle = results
 
-                for article in referenceArticle:
-                    print(f"\t\tid: {getKeyArticle(article, 'id')}")
-                    print(f"\t\ttitle: {getKeyArticle(article, 'title')}")
-                    print(f"\t\tyear: {getKeyArticle(article, 'year')}")
+        if getKeyArticle(articleItem, 'references') != None:
+            print(f"references: {', '.join(map(str, getKeyArticle(articleItem, 'references')))}")
         else:
-            
             print("References: None")
-    
+
+        print("Referenced By Following Articles:")
+        results = collection.find({"references": {"$in": [getKeyArticle(articleItem, 'id')]}})
+        referenceArticle = results
+
+        for article in referenceArticle:
+            print(f"\t\tid: {getKeyArticle(article, 'id')}")
+            print(f"\t\ttitle: {getKeyArticle(article, 'title')}")
+            print(f"\t\tyear: {getKeyArticle(article, 'year')}")
+
     userInput = input("Please insert a keyword or keywords of the article you would like to search\n")
     keywordsList = userInput.split()
     keywords = ""
@@ -88,11 +107,10 @@ def searchForArticle(db):
     for word in keywordsList:
         keywords += f"\"{word}\" "
 
-
     articles = collection.find({"$text": {"$search": keywords}})
-
     articleDict = dict((x, article) for x, article in enumerate(articles, 1))
-    print("The search returned" + str(len(articleDict)) + "articles:")
+   
+    print("The search returned " + str(len(articleDict)) + " articles:")
     for key, value in articleDict.items():
         print(f"{key}. | {value['title']} | {value['year']} | {value['venue']}")
     
@@ -104,15 +122,25 @@ def searchForArticle(db):
         userSelection = input("Please select an article to see all fields including the abstract and the authors in addition to the fields listed above. \n")
         while userSelection.isdigit() == False or int(userSelection) <= 0 or int(userSelection) > (len(articleDict)):
             userSelection = (input("Invalid selection! Please select a valid option.\n"))
-    
         userSelection = int(userSelection)
+        
         while userSelection < 1 and userSelection > (len(articleDict) + 1):
             userSelection = int(input("Please select a valid option. \n"))
-            
         #print all the articles
         printArticle(articleDict[userSelection])
+
     print("")
 
+    #Reprompt user for user choice
+    userChoice = input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n")
+    if userChoice == "1":
+        clear_screen()
+        mainMenu(db)
+    elif userChoice == "2":
+        exit()
+    else:
+        clear_screen()
+        mainMenu(db)
 
 def searchForAuthors(db):
     '''
@@ -142,7 +170,6 @@ def searchForAuthors(db):
         for key in dic:
             if key == "authors":
                 authorNames.append(dic[key])
-    
 
     #Gather all matchingNames from query and append to list
     matchingNames = []
@@ -152,7 +179,6 @@ def searchForAuthors(db):
             if keyword.lower() in name.lower():
                 matchingNames.append(name)
 
-    
     #Check to see how many times the name appears in the list and it publication number is the value
     for name in matchingNames:
         matchingNamesDic[name] = 0
@@ -167,15 +193,7 @@ def searchForAuthors(db):
         print(str(n) + ": " + '{:15s} {:4}'.format(k,str(matchingNamesDic[k])))
     print("")
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    #Prompts the user to select which of the authors they would like to see and all their workd
-    selectAuthor = int(input("Please select which author you would like to view"))
-    executeQuery
-=======
-=======
     #Checks if there are any matching author names
->>>>>>> Stashed changes
     #Prompts the user to select which of the authors they would like to see and all their works
     if len(matchingNames) == 0:
         print("No results found.\n")
@@ -189,14 +207,8 @@ def searchForAuthors(db):
         
         #Prints all the title year and venue of the author
         print("")
-<<<<<<< Updated upstream
-    
-    
->>>>>>> Stashed changes
-    
-=======
-        print(f"All work of {matchingNames[selectAuthor - 1]}:")
-        query = {"authors" : {"$in": [matchingNames[selectAuthor - 1]]}}
+        print(f"All work of {list(matchingNamesDic)[selectAuthor - 1]}:")
+        query = {"authors" : {"$in": [list(matchingNames)[selectAuthor - 1]]}}
         executeQuery = collection.find(query)
         
         dicList = []
@@ -211,70 +223,81 @@ def searchForAuthors(db):
             print(f"venue: {dic['venue']}")
             print("")
 
->>>>>>> Stashed changes
-
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
-
     
 def listVenues(db):
+    global list_of_venue_results
     '''
     Prompts user for number
     Displays venue, the number of articles in that venue, and the number of articles that reference a paper in that venue
     '''
+    clear_screen()
     #error checking
     while True:
         try:
             userInput = int(input("Please enter the number of venues you would like to see: "))
+            if userInput > len(list_of_venue_results)-1:
+                print("Given Number is too large....")
+                raise ValueError
             break
         except ValueError:
-<<<<<<< Updated upstream
-            print("Please enter a valid number") 
+            print("Please enter a valid number\n")
 
-    #query to get the number of articles in each venue
-    venueCount = db["dblp"].aggregate([
-        {"$group": {"_id": "$venue", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": userInput}
-    ])
-=======
-            print("Please enter a valid number\n") 
-    
-    
-    collection = db['dblp']
 
-    #query to get the number of articles in each venue
-   
-    test = collection.aggregate([{'$match': {'venue': {'$not': re.compile('^(?![\s\S])')}}}, {'$group':{'_id' : '$venue', 'article_count' : {'$sum' : 1}}}])
-    test = list(test)
->>>>>>> Stashed changes
+    # First result is an empty venue ""
+    for i in range(1, userInput + 1):
+        object_of_result = list_of_venue_results[i]
+        # For each article in venu:
+        # Q for reference to article <- Count result
+        # Sum then print
+        filter = {
+            'venue': 'international conference on human-computer interaction'
+        }
 
-    print(test)
-    #query to get the number of articles that reference a paper in each venue
-    venueCountDict =  collection.aggregate([{"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}])
-    for dic in venueCountDict:
-        print(dic["_id"] + f"\t| {dic['count']}")
-    
-    #convert the query results to dictionaries
-    #venueCountDict = dict((x, venue) for x, venue in enumerate(venueCount, 1))
-    #venueRefCountDict = dict((x, venue) for x, venue in enumerate(venueRefCount, 1))
+        result = db['dplb'].find(
+            filter
+        )
+        sum = 0
+        for i in result:
+            result = db['dplb'].aggregate([
+                {
+                    '$match': {
+                        'references': {
+                            '$in': [
+                                i["id"]
+                            ]
+                        }
+                    }
+                }, {
+                    '$group': {
+                        '_id': '',
+                        'count': {
+                            '$sum': 1
+                        }
+                    }
+                }
+            ]).batch_size(200)
+            for dict in result:
+                sum += dict["count"]
 
-    
-    for x in venueCountDict:
-        print(x)
-    print(venueCountDict)
+        print( sum )
 
-    #print the results
-    #for key, value in venueCountDict.items():
-        #print(f"{key}. | {value['_id']} | {value['count']} | {venueRefCountDict[key]['count']}")
+        #loop results here
+
+        print("Venue: " + object_of_result["_id"] + " ==== # of Articles: " + str(object_of_result["count"]))
+
+    print( "Total Unique Venues: " + str(len(list_of_venue_results) - 1) + "\n\n")
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
@@ -331,6 +354,7 @@ def addArticle(db):
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
@@ -339,11 +363,37 @@ def exit():
     print("Now exiting, thank you for using our services!")
 
 def main():
+    global list_of_venue_results
+
     #Prompt user for portNum and insert it into client name
-    portNum = inputPortNum()
+    while True:
+        portNum = inputPortNum()
+        if portNum != "":
+            break
     client = MongoClient('mongodb://localhost:' + str(portNum))
     db = client["291db"]
+    try:
 
+        if (len(list_of_venue_results) == 0):
+            result = db['dplb'].aggregate([
+                {
+                    '$group': {
+                        '_id': '$venue',
+                        'count': {
+                            '$sum': 1
+                        }
+                    }
+                }, {
+                    '$sort': {
+                        'count': -1
+                    }
+                }
+            ])
+
+            list_of_venue_results = list(result)
+    except Exception as e:
+        print(" Venue list could not be aggrigated, please restart program:  " + e)
+        quit()
     #Calls Main menu function
     mainMenu(db)
 
