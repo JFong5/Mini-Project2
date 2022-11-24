@@ -33,33 +33,6 @@ def mainMenu(db):
     elif choice == 5:
         #Executes exit function and closes program
         exit()
-'''
-def searchForArticle(db):
-    
-    Prompts user for keyword
-    Displays all Articles matching the keyword
-    
-    #Connects to dplb collection in the database
-    collection = db["dplb"]
-
-
-    #Prompts user for matching keyword or keywords
-    userKeywords = input("Please insert a keyword or keywords of the article you would like to search\n")
-    keywordsList = userKeywords.split()
-
-    #Search Query
-    query = {"n_citation": 0}
-    mydoc = collection.find(query)
-
-    print(mydoc.explain()['executionStats'])
-
-    #Reprompt user for user choice
-    userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
-    if userChoice == 1:
-        mainMenu(db)
-    elif userChoice == 2:
-        exit()
-'''
 
 def searchForArticle(db):
     """
@@ -121,7 +94,7 @@ def searchForArticle(db):
 
     userSelection = input("Please select an article to see all fields including the abstract and the authors in addition to the fields listed above. \n")
     
-    if userSelection.isNotDigit() or userSelection == "q":
+    if userSelection.isdigit() == False or userSelection == "q":
         print("Exiting to main menu")
         return
     else:
@@ -152,11 +125,28 @@ def searchForAuthors(db):
 
     #Executes Query *Need to test if query uses indexes
     executeQuery = collection.find(query)
-    
-    for x in executeQuery:
-        print(x)
+
+    #Aggregate results
 
     #Format the output of the query
+    authorNames = []
+
+    for dic in executeQuery:
+        for key in dic:
+            if key == "authors":
+                authorNames.append(dic[key])
+    
+    print(authorNames)
+    
+    #Gather all matching names for query
+    matchingNames = []
+    for names in authorNames:
+        for name in names:
+            if keyword.lower() in name.lower():
+                matchingNames.append(name)
+
+    for x in matchingNames:
+        print(x)
 
 
     #Reprompt user for user choice
@@ -166,11 +156,43 @@ def searchForAuthors(db):
     elif userChoice == 2:
         exit()
 
+    
 def listVenues(db):
     '''
     Prompts user for number
     Displays venue, the number of articles in that venue, and the number of articles that reference a paper in that venue
     '''
+    #error checking
+    while True:
+        try:
+            userInput = int(input("Please enter the number of venues you would like to see: "))
+            break
+        except ValueError:
+            print("Please enter a valid number") 
+
+    #query to get the number of articles in each venue
+    venueCount = db["dblp"].aggregate([
+        {"$group": {"_id": "$venue", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": userInput}
+    ])
+
+    #query to get the number of articles that reference a paper in each venue
+    venueRefCount = db["dblp"].aggregate([
+        {"$match": {"references": {"$exists": True}}},
+        {"$group": {"_id": "$venue", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": userInput}
+    ])
+
+    #convert the query results to dictionaries
+    venueCountDict = dict((x, venue) for x, venue in enumerate(venueCount, 1))
+    venueRefCountDict = dict((x, venue) for x, venue in enumerate(venueRefCount, 1))
+
+    #print the results
+    for key, value in venueCountDict.items():
+        print(f"{key}. | {value['_id']} | {value['count']} | {venueRefCountDict[key]['count']}")
+
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
@@ -208,11 +230,12 @@ def addArticle(db):
     authorList = []
     while not allAuthorsListed:
         authorNames = input("Please insert the name of the authors (if you wish to stop adding authors insert `) \n")
-        authorList.append(authorNames)
         if authorNames == "`":
             allAuthorsListed = True
+        else:
+            authorList.append(authorNames)
 
-    year = int(input("Please insert the year of publication\n"))
+    year = input("Please insert the year of publication\n")
     
     #set abstract and venue to null, references set to an empty array, n_citations set to 0
     venue = None
