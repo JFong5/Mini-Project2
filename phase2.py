@@ -207,8 +207,8 @@ def searchForAuthors(db):
         
         #Prints all the title year and venue of the author
         print("")
-        print(f"All work of {matchingNames[selectAuthor - 1]}:")
-        query = {"authors" : {"$in": [matchingNames[selectAuthor - 1]]}}
+        print(f"All work of {list(matchingNamesDic)[selectAuthor - 1]}:")
+        query = {"authors" : {"$in": [list(matchingNames)[selectAuthor - 1]]}}
         executeQuery = collection.find(query)
         
         dicList = []
@@ -282,7 +282,7 @@ def listVenues(db):
                         }
                     }
                 }
-            ])
+            ]).batch_size(200)
             for dict in result:
                 sum += dict["count"]
 
