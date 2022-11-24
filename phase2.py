@@ -22,18 +22,23 @@ def mainMenu(db):
     choice = int(input("Please select the following task you would like to perform: \n1.Search for article \n2.Search for authors \n3.List the venues \n4.Add an article \n5.Exit \n"))
     if choice == 1:
         #Executes searchForArticle(db) function
+        print("")
         searchForArticle(db)
     elif choice == 2:
         #Executes searchForAuthors(db) function
+        print("")
         searchForAuthors(db)
     elif choice == 3:
         #Executes listVenues(db) function
+        print("")
         listVenues(db)
     elif choice == 4:
         #Executes addArticle(db) function
+        print("")
         addArticle(db)
     elif choice == 5:
         #Executes exit function and closes program
+        print("")
         exit()
 
 def searchForArticle(db):
@@ -88,11 +93,10 @@ def searchForArticle(db):
     for word in keywordsList:
         keywords += f"\"{word}\" "
 
-
     articles = collection.find({"$text": {"$search": keywords}})
-
     articleDict = dict((x, article) for x, article in enumerate(articles, 1))
-    print("The search returned" + str(len(articleDict)) + "articles:")
+   
+    print("The search returned " + str(len(articleDict)) + " articles:")
     for key, value in articleDict.items():
         print(f"{key}. | {value['title']} | {value['year']} | {value['venue']}")
     
@@ -104,13 +108,21 @@ def searchForArticle(db):
         userSelection = input("Please select an article to see all fields including the abstract and the authors in addition to the fields listed above. \n")
         while userSelection.isdigit() == False or int(userSelection) <= 0 or int(userSelection) > (len(articleDict)):
             userSelection = (input("Invalid selection! Please select a valid option.\n"))
-        
         userSelection = int(userSelection)
         
+        while userSelection < 1 and userSelection > (len(articleDict) + 1):
+            userSelection = int(input("Please select a valid option. \n"))
         #print all the articles
         printArticle(articleDict[userSelection])
     print("")
 
+    #Reprompt user for user choice
+    userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
+    if userChoice == 1:
+        print("")
+        mainMenu(db)
+    elif userChoice == 2:
+        exit()
 
 def searchForAuthors(db):
     '''
@@ -165,15 +177,7 @@ def searchForAuthors(db):
         print(str(n) + ": " + '{:15s} {:4}'.format(k,str(matchingNamesDic[k])))
     print("")
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    #Prompts the user to select which of the authors they would like to see and all their workd
-    selectAuthor = int(input("Please select which author you would like to view"))
-    executeQuery
-=======
-=======
     #Checks if there are any matching author names
->>>>>>> Stashed changes
     #Prompts the user to select which of the authors they would like to see and all their works
     if len(matchingNames) == 0:
         print("No results found.\n")
@@ -187,12 +191,6 @@ def searchForAuthors(db):
         
         #Prints all the title year and venue of the author
         print("")
-<<<<<<< Updated upstream
-    
-    
->>>>>>> Stashed changes
-    
-=======
         print(f"All work of {matchingNames[selectAuthor - 1]}:")
         query = {"authors" : {"$in": [matchingNames[selectAuthor - 1]]}}
         executeQuery = collection.find(query)
@@ -209,11 +207,11 @@ def searchForAuthors(db):
             print(f"venue: {dic['venue']}")
             print("")
 
->>>>>>> Stashed changes
 
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
@@ -230,16 +228,6 @@ def listVenues(db):
             userInput = int(input("Please enter the number of venues you would like to see: "))
             break
         except ValueError:
-<<<<<<< Updated upstream
-            print("Please enter a valid number") 
-
-    #query to get the number of articles in each venue
-    venueCount = db["dblp"].aggregate([
-        {"$group": {"_id": "$venue", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": userInput}
-    ])
-=======
             print("Please enter a valid number\n") 
     
     
@@ -249,7 +237,6 @@ def listVenues(db):
    
     test = collection.aggregate([{'$match': {'venue': {'$not': re.compile('^(?![\s\S])')}}}, {'$group':{'_id' : '$venue', 'article_count' : {'$sum' : 1}}}])
     test = list(test)
->>>>>>> Stashed changes
 
     print(test)
     #query to get the number of articles that reference a paper in each venue
@@ -273,6 +260,7 @@ def listVenues(db):
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
@@ -329,6 +317,7 @@ def addArticle(db):
     #Reprompt user for user choice
     userChoice = int(input("Would you like to go back to the main menu or exit? \n1.Go back to main menu \n2.Exit\n"))
     if userChoice == 1:
+        print("")
         mainMenu(db)
     elif userChoice == 2:
         exit()
